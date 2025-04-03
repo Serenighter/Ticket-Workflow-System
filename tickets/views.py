@@ -9,6 +9,9 @@ class TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer
     #permission_classes = [IsAuthenticated]
 
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
 class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer

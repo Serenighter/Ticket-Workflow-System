@@ -54,7 +54,7 @@ class Ticket(models.Model):
     priority = models.CharField("Priorytet zgłoszenia", max_length=20, choices=PRIORITY_CHOICES, default='LOW')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(User, verbose_name="Zgłaszający", on_delete=models.PROTECT)
+    created_by = models.ForeignKey(User, verbose_name="Zgłaszający", on_delete=models.PROTECT, null=True, blank=True)
     of_department = models.ForeignKey(Department, on_delete=models.PROTECT, related_name='tickets')
     assigned = models.ForeignKey(User, verbose_name="Przypisane do", on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tickets')
     due = models.DateTimeField("Termin realizacji", null=True, blank=True)
