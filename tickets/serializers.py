@@ -16,6 +16,8 @@ class DepartmentSerializer(serializers.ModelSerializer):
 class TicketSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
     # created_by = serializers.CharField(default=serializers.CurrentUserDefault())
+    of_department = DepartmentSerializer(read_only=True)
+    department_id = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all(), write_only=True, source='of_department', required=True, help_text="For development purposes, specify user's department.")
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     priority_display = serializers.CharField(source='get_priority_display', read_only=True)
 

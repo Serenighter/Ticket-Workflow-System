@@ -8,9 +8,9 @@ from rest_framework.authtoken.models import Token
 class Department(models.Model):
     name = models.CharField("Nazwa działu", max_length=100, unique=True)
     description = models.TextField("Opis", blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
     contact_email = models.EmailField("Email kontaktowy", blank=True)
     identification = models.CharField("ID działu", max_length=10, unique=True, default=None)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Dział"
@@ -54,8 +54,8 @@ class Ticket(models.Model):
     priority = models.CharField("Priorytet zgłoszenia", max_length=20, choices=PRIORITY_CHOICES, default='LOW')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(User, verbose_name="Zgłaszający", on_delete=models.PROTECT, null=True, blank=True)
-    of_department = models.ForeignKey(Department, on_delete=models.PROTECT, related_name='tickets')
+    created_by = models.ForeignKey(User, verbose_name="Zgłaszający", on_delete=models.PROTECT, null=True)
+    of_department = models.ForeignKey(Department, verbose_name="Dział zgłaszający", on_delete=models.PROTECT, related_name='tickets')
     assigned = models.ForeignKey(User, verbose_name="Przypisane do", on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tickets')
     due = models.DateTimeField("Termin realizacji", null=True, blank=True)
     closed_at = models.DateTimeField("Zgłoszenie zamknięte", null=True, blank=True)
