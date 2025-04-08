@@ -135,6 +135,6 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",  # Vue.js dev server
+    "http://localhost:5173",  # Vue.js dev server
     "http://127.0.0.1:8080",
 ]
