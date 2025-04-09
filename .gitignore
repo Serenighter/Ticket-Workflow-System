@@ -173,6 +173,7 @@ pyrightconfig.json
 !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/*.code-snippets
+frontend/ticketworkflowfrontend/.vscode/extensions.json
 
 # Local History for Visual Studio Code
 .history/
