@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import TicketsView from '../views/TicketsView.vue'
+import TicketsView from '../views/LayoutView.vue'
 
 const routes = [
     {
