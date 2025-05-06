@@ -6,16 +6,16 @@ interface TicketFormData {
   title: string
   description: string
   category: string
-  priority: 'low' | 'medium' | 'high'
-  dueDate?: string
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
+  due?: string,
 }
 
 const form = ref<TicketFormData>({
-  title: '',
-  description: '',
-  category: '',
-  priority: 'medium',
-  dueDate: undefined
+  title: "",
+  description: "",
+  category: "",
+  priority: 'LOW',
+  due: undefined,
 })
 
 const ticketStore = useTicketStore()
@@ -32,7 +32,7 @@ const submit = () => {
     description: form.value.description,
     category: form.value.category,
     priority: form.value.priority,
-    dueDate: form.value.dueDate
+    due: form.value.due
   })
   emit('close')
 }
@@ -55,13 +55,13 @@ const submit = () => {
       <option value="DEVICE_NEEDS">Zapotrzebowanie na sprzęt</option>
     </select>
     <select v-model="form.priority">
-      <option value="low">Niski</option>
-      <option value="medium">Średni</option>
-      <option value="high">Wysoki</option>
+      <option value="LOW">Niski</option>
+      <option value="MEDIUM">Średni</option>
+      <option value="HIGH">Wysoki</option>
     </select>
     <input 
       type="date" 
-      v-model="form.dueDate" 
+      v-model="form.due" 
       :min="new Date().toISOString().split('T')[0]"
     >
     <button type="submit">Wyślij zgłoszenie</button>

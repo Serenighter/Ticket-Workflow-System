@@ -49,7 +49,7 @@ class Ticket(models.Model):
 
     title = models.CharField("Tytuł", max_length=100)
     description = models.TextField("Opis problemu")
-    category = models.CharField("Ketegoria zgłoszenia", max_length=32, choices=CATEGORY_CHOICES, default=None)
+    category = models.CharField("Kategoria zgłoszenia", max_length=32, choices=CATEGORY_CHOICES, default=None)
     status = models.CharField("Status zgłoszenia", max_length=20, choices=STATUS_CHOICES, default='OPEN')
     priority = models.CharField("Priorytet zgłoszenia", max_length=20, choices=PRIORITY_CHOICES, default='LOW')
     created_at = models.DateTimeField(auto_now_add=True)

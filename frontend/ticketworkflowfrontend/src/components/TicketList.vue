@@ -7,27 +7,39 @@ const ticketStore = useTicketStore()
 
 onMounted(() => {
   ticketStore.fetchTickets()
+  console.log('Tickets after fetch: ', ticketStore.tickets)
+  
 })
 </script>
 
 <template>
   <div class="ticket-list">
     <h2>Wszystkie zgłoszenia</h2>
+    <div v-if="ticketStore.isLoading">Loading tickets...</div>
+    
+    <div v-else-if="!ticketStore.tickets.length" class="empty-state">
+      <p>No tickets found</p>
+    </div>
     
     <div 
+      v-else
       v-for="ticket in ticketStore.tickets" 
       :key="ticket.id" 
       class="ticket-card"
-      :class="`status-${ticket.status}`"
+      :class="`status-${ticket.status?.toLowerCase() || 'unknown'}`"
     >
       <div class="card-header">
-        <h3>{{ ticket.title }}</h3>
-        <span class="priority-badge" :class="ticket.priority">
-          {{ ticket.priority === 'high' ? 'Wysoki' : ticket.priority === 'medium' ? 'Średni' : 'Niski' }}
+        <h3>{{ ticket.title || 'Untitled Ticket' }}</h3>
+        <span v-if="ticket.priority" class="priority-badge" :class="ticket.priority.toLowerCase()">
+          {{
+            ticket.priority === 'HIGH' ? 'Wysoki' :
+            ticket.priority === 'MEDIUM' ? 'Średni' :
+            ticket.priority === 'URGENT' ? 'Pilny' : 'Niski'
+          }}
         </span>
       </div>
       
-      <p class="description">{{ ticket.description }}</p>
+      <p class="description">{{ ticket.description || 'No description provided' }}</p>
       
       <div class="meta-info">
         <div class="meta-item">
@@ -37,16 +49,30 @@ onMounted(() => {
         
         <div class="meta-item">
           <span class="label">Status:</span>
-          <TicketStatus :ticket="ticket" />
+          <TicketStatus v-if="ticket.status" :status="ticket.status" />
+          <span v-else>Unknown</span>
         </div>
         
-        <div v-if="ticket.dueDate" class="meta-item">
+        <div v-if="ticket.due" class="meta-item">
           <span class="label">Termin:</span>
           <span class="due-date">
-            {{ new Date(ticket.dueDate).toLocaleDateString('pl-PL') }}
+            {{ new Date(ticket.due).toLocaleDateString('pl-PL') }}
           </span>
         </div>
+        <div class="meta-item">
+          <span class="label">Zgłoszone przez:</span>
+          <span> {{ ticket.created_by + ", " + ticket.of_department }}</span>
+        </div>
+        
       </div>
+      <div class="timestamp-footer">
+          <span v-if="ticket.created_at" class="timestamp">
+            Utworzono: {{ new Date(ticket.created_at).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' }) }}
+          </span>
+          <span v-if="ticket.updated_at" class="timestamp">
+            Zaktualizowano: {{ new Date(ticket.updated_at).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' }) }}
+          </span>
+        </div>
     </div>
   </div>
 </template>
@@ -59,6 +85,7 @@ onMounted(() => {
 }
 
 .ticket-card {
+  position: relative;
   background: white;
   border-radius: 12px;
   padding: 1.5rem;
@@ -75,7 +102,10 @@ onMounted(() => {
 
 .status-new { border-left-color: var(--secondary); }
 .status-in_progress { border-left-color: #4dabf7; }
-.status-resolved { border-left-color: #adb5bd; }
+.status-resolved { border-left-color: #18c55b; }
+.status-unknown {
+  border-left-color: #cccccc;
+}
 
 .card-header {
   display: flex;
@@ -122,6 +152,43 @@ onMounted(() => {
   font-weight: 500;
   color: #868e96;
   min-width: 70px;
+}
+
+.timestamp-footer {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #eeeeee;
+  font-size: 0.8rem;
+  color: #666;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+
+.timestamp {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.timestamp:not(:last-child)::after {
+  content: " ";
+  color: #999;
+  margin-left: 2.5rem;
+  margin-right: 5.5rem;
+}
+/*mobile*/
+@media (max-width: 480px) {
+  .timestamp-footer {
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-top: 0.5rem;
+  }
+  
+  .timestamp::after {
+    display: none;
+  }
 }
 
 .empty-state {

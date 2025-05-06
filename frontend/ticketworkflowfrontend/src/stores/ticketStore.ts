@@ -1,17 +1,32 @@
-// src/stores/ticketStore.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
+import { mockTickets } from '../api/server'
+
 
 export interface Ticket {
   id: number
   title: string
   description: string
-  status: 'new' | 'in_progress' | 'resolved'
   category: string
-  priority: 'low' | 'medium' | 'high'
-  createdAt: string
-  dueDate?: string
+  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED'
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
+  created_at: string
+  updated_at: string
+  created_by: number | string | null
+  of_department: number | string
+  assigned: number | string | null
+  due?: string,
+  closed_at: string
+}
+
+export interface TicketCreate {
+  title: string
+  description: string
+  category: string
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
+  due?: string
+  assigned?: number | null
 }
 
 export const useTicketStore = defineStore('ticket', () => {
@@ -22,47 +37,20 @@ export const useTicketStore = defineStore('ticket', () => {
   const fetchTickets = async () => {
     isLoading.value = true
     try {
-
-      tickets.value = [
-        {
-          id: 1,
-          title: 'Zgłoszenie example (PLACEHOLDER)',
-          description: 'Opis problemu',
-          status: 'new',
-          category: 'HARDWARE_FAILURE',
-          priority: 'medium',
-          createdAt: new Date().toISOString(),
-          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        },
-        {
-          id: 2,
-          title: 'Zgłoszenie example (PLACEHOLDER)',
-          description: 'Opis problemu',
-          status: 'in_progress',
-          category: 'SOFTWARE_FAILURE',
-          priority: 'high',
-          createdAt: new Date().toISOString(),
-          dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
-        }
-      ]
-      // const response = await axios.get('/api/tickets')
-      // tickets.value = response.data
+      tickets.value = mockTickets;
+      console.log('Using mock tickets directly');
     } catch (err) {
-      error.value = 'Błąd pobierania zgłoszeń'
-      console.error(err)
+      error.value = 'Błąd pobierania zgłoszeń';
+      console.error(err);
     } finally {
-      isLoading.value = false
+      isLoading.value = false;
     }
   }
 
-  const createTicket = async (ticketData: Omit<Ticket, 'id' | 'createdAt' | 'status'> & { dueDate?: string }) => {
+  const createTicket = async (ticketData: TicketCreate) => {
     isLoading.value = true
     try {
-      const response = await axios.post('/api/tickets', {
-        ...ticketData,
-        status: 'new',
-        createdAt: new Date().toISOString()
-      })
+      const response = await axios.post('/api/tickets/', ticketData)
       tickets.value.push(response.data)
       return response.data
     } catch (err) {
@@ -73,20 +61,33 @@ export const useTicketStore = defineStore('ticket', () => {
     }
   }
 
-  const updateTicketStatus = async (id: number, newStatus: Ticket['status']) => {
+  const updateTicket = async (id: number, ticketData: Partial<Ticket>) => {
     try {
-      const response = await axios.patch<{ status: Ticket['status'] }>(
-        `/api/tickets/${id}/status`,
-        { status: newStatus }
-      )
+      const response = await axios.patch(`/api/tickets/${id}/`, ticketData)
       
-      const ticket = tickets.value.find(t => t.id === id)
-      if (ticket) {
-        ticket.status = response.data.status
+      const index = tickets.value.findIndex(t => t.id === id)
+      if (index !== -1) {
+        tickets.value[index] = response.data
       }
+      return response.data
     } catch (err) {
-      error.value = 'Błąd aktualizacji statusu'
-      console.error('Update status error:', err)
+      error.value = 'Błąd aktualizacji zgłoszenia'
+      console.error('Update error:', err)
+      throw err
+    }
+  }
+  
+  const updateTicketStatus = async (id: number, newStatus: Ticket['status']) => {
+    return updateTicket(id, { status: newStatus })
+  }
+  
+  const deleteTicket = async (id: number) => {
+    try {
+      await axios.delete(`/api/tickets/${id}/`)
+      tickets.value = tickets.value.filter(t => t.id !== id)
+    } catch (err) {
+      error.value = 'Błąd usuwania zgłoszenia'
+      console.error('Delete error:', err)
       throw err
     }
   }
@@ -95,7 +96,9 @@ export const useTicketStore = defineStore('ticket', () => {
     tickets,
     fetchTickets,
     createTicket,
+    updateTicket,
     updateTicketStatus,
+    deleteTicket,
     isLoading,
     error
   }
