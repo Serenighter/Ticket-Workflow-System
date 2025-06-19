@@ -194,6 +194,45 @@ class TicketViewSet(viewsets.ModelViewSet):
         
         return queryset.select_related('created_by', 'assigned', 'of_department')
 
+    def destroy(self, request, *args, **kwargs):
+
+        ticket = self.get_object()
+        
+        # Check if user has permission
+        if not self.can_delete_ticket(request.user, ticket):
+            return Response(
+                {'error': 'You do not have permission to delete this ticket'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        ticket_title = ticket.title
+        ticket_status = ticket.get_status_display()
+        ticket.delete()
+        return Response(
+            {'message': f'Ticket "{ticket_title}" (Status: {ticket_status}) deleted successfully'}, 
+            status=status.HTTP_204_NO_CONTENT
+        )
+
+    def can_delete_ticket(self, user, ticket):
+        if user.is_superuser:
+            return True
+        
+        if user.is_staff:
+            return True
+        
+        try:
+            user_profile = user.employeeprofile
+            if (user_profile.is_department_manager and 
+                user_profile.department == ticket.of_department):
+                return True
+        except EmployeeProfile.DoesNotExist:
+            pass
+        
+        if ticket.created_by == user:
+            return True
+        
+        return False
+
     @action(detail=False, methods=['get'])
     def my_tickets(self, request):
         tickets = Ticket.objects.filter(created_by=request.user)
@@ -205,6 +244,44 @@ class TicketViewSet(viewsets.ModelViewSet):
         tickets = Ticket.objects.filter(assigned=request.user)
         serializer = self.get_serializer(tickets, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['delete'])
+    def bulk_delete_closed(self, request):
+        # delete closed tickets
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {'error': 'Only staff members can perform bulk delete'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if request.user.is_superuser or request.user.is_staff:
+            closed_tickets = Ticket.objects.filter(status='CLOSED')
+        else:
+            try:
+                user_profile = request.user.employeeprofile
+                if user_profile.is_department_manager and user_profile.department:
+                    closed_tickets = Ticket.objects.filter(
+                        status='CLOSED', 
+                        of_department=user_profile.department
+                    )
+                else:
+                    return Response(
+                        {'error': 'Insufficient permissions'}, 
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+            except EmployeeProfile.DoesNotExist:
+                return Response(
+                    {'error': 'Employee profile not found'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        
+        deleted_count = closed_tickets.count()
+        closed_tickets.delete()
+        
+        return Response(
+            {'message': f'{deleted_count} closed tickets deleted successfully'}, 
+            status=status.HTTP_200_OK
+        )
 
     @action(detail=True, methods=['post'])
     def assign(self, request, pk=None):
