@@ -3,5 +3,5 @@ export interface TicketForm {
     description: string
     category: string
     priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
-    due?: string,
-  }
+    due?: string
+}
